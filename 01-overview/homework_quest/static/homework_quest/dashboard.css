@@ -19,9 +19,20 @@ body.dashboard {
 }
 
 .dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 0.75rem 1.5rem;
   background: #161b22;
   border-bottom: 3px solid #58a6ff;
+}
+
+.dashboard__header .settings__back {
+  color: #58a6ff;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .dashboard__title {

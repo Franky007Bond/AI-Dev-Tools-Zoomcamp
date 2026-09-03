@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Homework Quest</title>
+  <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/settings.css' %}">
+</head>
+<body class="dashboard settings-gate">
+  <header class="dashboard__header">
+    <a class="settings__back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+    <h1 class="dashboard__title">Settings</h1>
+  </header>
+
+  <main class="settings__main">
+    <p class="settings__note">
+      Admin PIN required. Only members with the admin flag can unlock household setup.
+    </p>
+    {% if error %}
+      <p class="settings__error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form class="settings-gate__form" method="post" action="{% url 'settings_unlock' %}">
+      {% csrf_token %}
+      <label class="field-label" for="gate-profile">Admin member</label>
+      <select class="field-input" id="gate-profile" name="profile_id" required>
+        {% for profile in admin_profiles %}
+          <option value="{{ profile.pk }}">{{ profile.name }}</option>
+        {% empty %}
+          <option value="" disabled>No admin members configured</option>
+        {% endfor %}
+      </select>
+
+      <label class="field-label" for="gate-pin">4-digit PIN</label>
+      <input class="field-input pin-input" id="gate-pin" name="pin" type="password"
+             inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required>
+
+      <button class="action-btn action-btn--primary" type="submit">Unlock settings</button>
+    </form>
+  </main>
+</body>
+</html>

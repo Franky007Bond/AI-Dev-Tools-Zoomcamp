@@ -17,6 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from homework_quest.settings_views import (
+    settings_logout_view,
+    settings_member_create_view,
+    settings_member_update_view,
+    settings_perk_create_view,
+    settings_perk_toggle_view,
+    settings_template_create_view,
+    settings_template_update_view,
+    settings_unlock_view,
+    settings_view,
+)
 from homework_quest.views import (
     chore_pool_view,
     create_adhoc_bounty_view,
@@ -38,6 +49,31 @@ urlpatterns = [
     ),
     path('chore-pool/log-bounty/<int:chore_id>/', log_bounty_view, name='log_bounty'),
     path('review-pending/', review_pending_view, name='review_pending'),
+    path('settings/', settings_view, name='settings'),
+    path('settings/unlock/', settings_unlock_view, name='settings_unlock'),
+    path('settings/logout/', settings_logout_view, name='settings_logout'),
+    path('settings/members/', settings_member_create_view, name='settings_member_create'),
+    path(
+        'settings/members/<int:member_id>/',
+        settings_member_update_view,
+        name='settings_member_update',
+    ),
+    path('settings/perks/', settings_perk_create_view, name='settings_perk_create'),
+    path(
+        'settings/perks/<int:perk_id>/toggle/',
+        settings_perk_toggle_view,
+        name='settings_perk_toggle',
+    ),
+    path(
+        'settings/templates/',
+        settings_template_create_view,
+        name='settings_template_create',
+    ),
+    path(
+        'settings/templates/<int:template_id>/',
+        settings_template_update_view,
+        name='settings_template_update',
+    ),
     path('admin/', admin.site.urls),
     path('api/', include('homework_quest.api_urls')),
 ]

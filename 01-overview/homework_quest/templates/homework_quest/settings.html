@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Homework Quest</title>
+  <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/settings.css' %}">
+</head>
+<body class="dashboard settings">
+  <header class="dashboard__header settings__header">
+    <a class="settings__back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+    <h1 class="dashboard__title">Settings</h1>
+    {% if settings_user %}
+      <span class="settings__signed-in">Signed in as {{ settings_user.name }}</span>
+    {% endif %}
+    <form method="post" action="{% url 'settings_logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="settings__logout">Lock</button>
+    </form>
+  </header>
+
+  <main class="settings__main">
+    <section class="settings-section" aria-labelledby="members-heading">
+      <h2 id="members-heading" class="panel-heading">Members</h2>
+      <ul class="settings-list">
+        {% for member in members %}
+          <li class="settings-card">
+            <form method="post" action="{% url 'settings_member_update' member.pk %}">
+              {% csrf_token %}
+              <label class="field-label">Name</label>
+              <input class="field-input" name="name" value="{{ member.name }}" required>
+              <label class="field-label">Avatar URL</label>
+              <input class="field-input" name="avatar_url" value="{{ member.avatar_url }}">
+              <label class="field-label">New PIN (optional)</label>
+              <input class="field-input" name="pin" type="password" inputmode="numeric"
+                     pattern="[0-9]{4}" maxlength="4" placeholder="Leave blank to keep">
+              <label class="settings-check">
+                <input type="checkbox" name="is_admin"{% if member.is_admin %} checked{% endif %}>
+                Admin access
+              </label>
+              <button class="action-btn" type="submit">Save member</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+      <details class="settings-add">
+        <summary>Add member</summary>
+        <form method="post" action="{% url 'settings_member_create' %}">
+          {% csrf_token %}
+          <label class="field-label">Name</label>
+          <input class="field-input" name="name" required>
+          <label class="field-label">Avatar URL</label>
+          <input class="field-input" name="avatar_url">
+          <label class="field-label">PIN</label>
+          <input class="field-input" name="pin" type="password" inputmode="numeric"
+                 pattern="[0-9]{4}" maxlength="4" required>
+          <label class="settings-check">
+            <input type="checkbox" name="is_admin">
+            Admin access
+          </label>
+          <button class="action-btn action-btn--primary" type="submit">Add member</button>
+        </form>
+      </details>
+    </section>
+
+    <section class="settings-section" aria-labelledby="perks-heading">
+      <h2 id="perks-heading" class="panel-heading">Perk library</h2>
+      <ul class="settings-list">
+        {% for perk in perks %}
+          <li class="settings-card settings-card--row">
+            <div>
+              <strong>{{ perk.title }}</strong>
+              <span class="settings-status{% if not perk.is_active %} settings-status--inactive{% endif %}">
+                {% if perk.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+              {% if perk.description %}
+                <p class="settings-meta">{{ perk.description }}</p>
+              {% endif %}
+            </div>
+            <form method="post" action="{% url 'settings_perk_toggle' perk.pk %}">
+              {% csrf_token %}
+              <button class="action-btn" type="submit">
+                {% if perk.is_active %}Deactivate{% else %}Activate{% endif %}
+              </button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+      <details class="settings-add" open>
+        <summary>Add perk</summary>
+        <form method="post" action="{% url 'settings_perk_create' %}">
+          {% csrf_token %}
+          <label class="field-label">Title</label>
+          <input class="field-input" name="title" required maxlength="200">
+          <label class="field-label">Description</label>
+          <textarea class="field-input" name="description" rows="2"></textarea>
+          <label class="settings-check">
+            <input type="checkbox" name="is_active" checked>
+            Active in perk draw
+          </label>
+          <button class="action-btn action-btn--primary" type="submit">Add perk</button>
+        </form>
+      </details>
+    </section>
+
+    <section class="settings-section" aria-labelledby="templates-heading">
+      <h2 id="templates-heading" class="panel-heading">Routine templates</h2>
+      <ul class="settings-list">
+        {% for template in templates %}
+          <li class="settings-card">
+            <form method="post" action="{% url 'settings_template_update' template.pk %}">
+              {% csrf_token %}
+              <label class="field-label">Title</label>
+              <input class="field-input" name="title" value="{{ template.title }}" required>
+              <label class="field-label">Category</label>
+              <input class="field-input" name="category" value="{{ template.category }}">
+              <label class="field-label">Minutes (XP: {{ template.base_xp }})</label>
+              <input class="field-input" name="estimated_minutes" type="number" min="1"
+                     value="{{ template.estimated_minutes }}" required>
+              <label class="field-label">Recurrence</label>
+              <input class="field-input" name="recurrence_rule" value="{{ template.recurrence_rule }}"
+                     placeholder="e.g. daily">
+              <button class="action-btn" type="submit">Save template</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+      <details class="settings-add">
+        <summary>Add routine template</summary>
+        <form method="post" action="{% url 'settings_template_create' %}">
+          {% csrf_token %}
+          <label class="field-label">Title</label>
+          <input class="field-input" name="title" required>
+          <label class="field-label">Category</label>
+          <input class="field-input" name="category">
+          <label class="field-label">Minutes</label>
+          <input class="field-input" name="estimated_minutes" type="number" min="1" value="15" required>
+          <label class="field-label">Recurrence</label>
+          <input class="field-input" name="recurrence_rule" placeholder="e.g. weekly">
+          <button class="action-btn action-btn--primary" type="submit">Add template</button>
+        </form>
+      </details>
+    </section>
+  </main>
+</body>
+</html>

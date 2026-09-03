@@ -1,0 +1,151 @@
+/* Household settings */
+
+.settings__back {
+  color: #58a6ff;
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.settings__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.settings__signed-in {
+  color: #8b949e;
+  font-size: 0.95rem;
+  margin-left: auto;
+}
+
+.settings__logout {
+  min-height: 44px;
+  padding: 0.4rem 1rem;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: #21262d;
+  color: #f5f5f5;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings__main {
+  flex: 1;
+  padding: 1rem 1.5rem 2rem;
+  overflow-y: auto;
+}
+
+.settings__note {
+  color: #8b949e;
+  max-width: 40rem;
+}
+
+.settings__error {
+  padding: 0.75rem 1rem;
+  background: #490202;
+  border: 1px solid #f85149;
+  border-radius: 8px;
+  color: #ffa198;
+}
+
+.settings-gate__form,
+.settings-add form,
+.settings-card form {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 420px;
+}
+
+.field-label {
+  font-weight: 600;
+  color: #c9d1d9;
+}
+
+.field-input {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #f5f5f5;
+}
+
+textarea.field-input {
+  min-height: auto;
+  resize: vertical;
+}
+
+.settings-section {
+  margin-bottom: 2rem;
+}
+
+.settings-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-card {
+  padding: 1rem 1.25rem;
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+}
+
+.settings-card--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-status {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  background: #238636;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.settings-status--inactive {
+  background: #6e7681;
+}
+
+.settings-meta {
+  margin: 0.35rem 0 0;
+  color: #8b949e;
+  font-size: 0.95rem;
+}
+
+.settings-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.settings-add summary {
+  cursor: pointer;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.settings-add {
+  padding: 1rem;
+  background: #161b22;
+  border: 2px dashed #30363d;
+  border-radius: 12px;
+}
+
+.dashboard__header .settings__back {
+  flex-shrink: 0;
+}
