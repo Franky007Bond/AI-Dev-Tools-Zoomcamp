@@ -109,3 +109,27 @@ class ChoreInstance(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class Perk(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class WeeklyCycle(models.Model):
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    selected_perk = models.ForeignKey(
+        Perk,
+        on_delete=models.PROTECT,
+        related_name="cycles",
+    )
+    standings_json = models.JSONField(default=dict)
+    winner_ids = models.JSONField(default=list)
+
+    def __str__(self) -> str:
+        return f"{self.start_time.date()} – {self.end_time.date()}"
