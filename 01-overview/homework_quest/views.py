@@ -1,11 +1,17 @@
 import json
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
+from homework_quest.dashboard import build_dashboard_context
 from homework_quest.models import ChoreInstance, Profile
 from homework_quest.services import ApprovalError, log_chore, peer_approve
+
+
+def dashboard_view(request):
+    return render(request, "homework_quest/dashboard.html", build_dashboard_context())
 
 
 def _parse_json(request):

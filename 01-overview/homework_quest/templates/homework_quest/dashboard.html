@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homework Quest</title>
+  <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+</head>
+<body class="dashboard">
+  <header class="dashboard__header">
+    <h1 class="dashboard__title">Homework Quest</h1>
+  </header>
+
+  <main class="dashboard__main">
+    <section class="dashboard__panel dashboard__panel--left" aria-label="Leaderboard and stake">
+      <div class="stake-banner">
+        <h2 class="stake-banner__label">This week&apos;s stake</h2>
+        {% if stake %}
+          <p class="stake-banner__title">{{ stake.title }}</p>
+        {% else %}
+          <p class="stake-banner__title stake-banner__title--empty">No stake selected yet</p>
+        {% endif %}
+        <p class="stake-banner__countdown">{{ countdown }}</p>
+      </div>
+
+      <h2 class="panel-heading">Leaderboard</h2>
+      {% if standings %}
+        <ol class="leaderboard">
+          {% for row in standings %}
+            <li class="leaderboard__row">
+              <div class="leaderboard__avatar" aria-hidden="true">
+                {% if row.profile.avatar_url %}
+                  <img src="{{ row.profile.avatar_url }}" alt="">
+                {% else %}
+                  <span class="leaderboard__initials">{{ row.profile.name|slice:":1" }}</span>
+                {% endif %}
+              </div>
+              <div class="leaderboard__info">
+                <span class="leaderboard__name">{{ row.profile.name }}</span>
+                <span class="leaderboard__xp">{{ row.xp }} XP</span>
+                <div class="leaderboard__progress" role="progressbar" aria-valuenow="{{ row.progress_vs_leader }}" aria-valuemin="0" aria-valuemax="100">
+                  <div class="leaderboard__progress-fill" style="width: {{ row.progress_vs_leader }}%;"></div>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="empty-state">Add household members to start the competition.</p>
+      {% endif %}
+    </section>
+
+    <section class="dashboard__panel dashboard__panel--right" aria-label="Activity feed">
+      <h2 class="panel-heading">Activity</h2>
+      {% if feed_items %}
+        <ul class="activity-feed">
+          {% for item in feed_items %}
+            <li class="activity-feed__item">
+              <div class="activity-feed__body">
+                <span class="activity-feed__title">{{ item.chore.title }}</span>
+                <span class="activity-feed__meta">{{ item.assignee_name }} · {{ item.chore.xp_value }} XP</span>
+              </div>
+              <span class="activity-feed__badge activity-feed__badge--{{ item.status_label|slugify }}">{{ item.status_label }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No chores logged yet this week.</p>
+      {% endif %}
+    </section>
+  </main>
+
+  <nav class="dashboard__actions" aria-label="Primary actions">
+    <a class="action-btn action-btn--primary" href="#">+ Log Chore</a>
+    <a class="action-btn" href="#">Review Pending</a>
+    <a class="action-btn" href="#">Chore Pool</a>
+  </nav>
+</body>
+</html>

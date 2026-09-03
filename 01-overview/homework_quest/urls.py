@@ -17,7 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from homework_quest.views import dashboard_view
+
 urlpatterns = [
+    path('', dashboard_view, name='dashboard'),
+    path('dashboard/', dashboard_view, name='dashboard-alt'),
     path('admin/', admin.site.urls),
     path('api/', include('homework_quest.api_urls')),
 ]

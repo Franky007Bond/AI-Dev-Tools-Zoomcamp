@@ -1,0 +1,268 @@
+/* Kitchen tablet idle dashboard — landscape ~1280×800 and up */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.dashboard {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #f5f5f5;
+  background: #0d1117;
+}
+
+.dashboard__header {
+  padding: 0.75rem 1.5rem;
+  background: #161b22;
+  border-bottom: 3px solid #58a6ff;
+}
+
+.dashboard__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dashboard__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  min-height: 0;
+}
+
+.dashboard__panel {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+}
+
+.panel-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+}
+
+.stake-banner {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: #1f6feb;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.stake-banner__label {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+.stake-banner__title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.stake-banner__title--empty {
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.stake-banner__countdown {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.leaderboard {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.leaderboard__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #30363d;
+}
+
+.leaderboard__row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard__avatar {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #30363d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.leaderboard__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.leaderboard__initials {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #58a6ff;
+}
+
+.leaderboard__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.leaderboard__name {
+  display: block;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.leaderboard__xp {
+  display: block;
+  color: #58a6ff;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.leaderboard__progress {
+  height: 10px;
+  background: #21262d;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.leaderboard__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #238636, #3fb950);
+  border-radius: 5px;
+}
+
+.activity-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.activity-feed__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #30363d;
+}
+
+.activity-feed__title {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.activity-feed__meta {
+  display: block;
+  color: #8b949e;
+  font-size: 0.95rem;
+}
+
+.activity-feed__badge {
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.activity-feed__badge--pending-approval {
+  background: #9e6a03;
+  color: #fff;
+}
+
+.activity-feed__badge--auto-approved {
+  background: #8957e5;
+  color: #fff;
+}
+
+.activity-feed__badge--verified {
+  background: #238636;
+  color: #fff;
+}
+
+.empty-state {
+  color: #8b949e;
+  font-style: italic;
+  margin: 0;
+}
+
+.dashboard__actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1.25rem;
+  background: #161b22;
+  border-top: 3px solid #30363d;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 3px solid #58a6ff;
+  background: #21262d;
+  color: #f5f5f5;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+
+.action-btn--primary {
+  background: #238636;
+  border-color: #3fb950;
+  color: #fff;
+}
+
+.action-btn:focus-visible {
+  outline: 3px solid #f0883e;
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .dashboard__main {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard__actions {
+    flex-direction: column;
+  }
+}
