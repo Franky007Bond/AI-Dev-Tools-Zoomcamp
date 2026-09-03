@@ -1,0 +1,27 @@
+[project]
+name = "homework-quest"
+version = "0.1.0"
+description = "Kitchen-tablet chore game: log chores, earn XP, weekly perk."
+authors = [
+    { name = "Franky007Bond", email = "frank.merwerth@gmx.de" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "django==6.1",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+]
+
+# Only supported test command: uv run pytest
+# Do not use pip, Poetry, or a system pytest outside this uv environment.
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "homework_quest.test_settings"
+pythonpath = ["."]
+python_files = ["tests.py", "test_*.py", "*_test.py"]

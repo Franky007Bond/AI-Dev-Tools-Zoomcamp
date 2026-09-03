@@ -18,7 +18,8 @@ Description: With **uv**, add pytest and pytest-django (or document `manage.py t
 
 ## 3. User Profile model with explicit admin flag
 Goal: Persist household members with hashed 4-digit PINs, cycle XP, and a settings-access flag.
-Description: Add a Profile with `name`, `avatar_url`, `pin_hash`, `current_cycle_xp`, `total_wins`, and `is_admin` (boolean, default False) so Task 27's settings gate has a real field to check instead of an undocumented convention decided later. Store PINs hashed only — never persist the raw 4-digit PIN.Add a Profile with name, avatar_url, pin_hash, current_cycle_xp, total_wins, and is_admin (boolean, default False) so Task 27's settings gate has a real field to check instead of an undocumented convention decided later. Store PINs hashed only — never persist the raw 4-digit PIN.
+Description: Add a Profile with `name`, `avatar_url`, `pin_hash`, `current_cycle_xp`, `total_wins`, and `is_admin` (boolean, default False) so Task 27's settings gate has a real field to check instead of an undocumented convention decided later. Store PINs hashed only — never persist the raw 4-digit PIN.
+
 
 ## 4. Unit tests for PIN hashing and profile XP fields
 Goal: Prove PINs are hashed and cycle XP starts at zero without using the browser.
