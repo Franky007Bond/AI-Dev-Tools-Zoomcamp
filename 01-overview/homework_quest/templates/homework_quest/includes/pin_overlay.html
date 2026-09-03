@@ -1,0 +1,54 @@
+{% load static %}
+<div id="pin-overlay" class="pin-overlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pin-overlay-title">
+  {% csrf_token %}
+  <div class="pin-overlay__backdrop" data-pin-overlay-close></div>
+  <div class="pin-overlay__panel">
+    <header class="pin-overlay__header">
+      <h2 id="pin-overlay-title" class="pin-overlay__title">Who are you?</h2>
+      <button type="button" class="pin-overlay__close" data-pin-overlay-close aria-label="Close">&times;</button>
+    </header>
+
+    <section class="pin-overlay__step pin-overlay__step--profiles" data-step="profile">
+      <ul class="pin-overlay__profiles">
+        {% for profile in pin_profiles %}
+          <li>
+            <button type="button" class="pin-overlay__profile" data-profile-id="{{ profile.pk }}">
+              <span class="pin-overlay__profile-avatar" aria-hidden="true">
+                {% if profile.avatar_url %}
+                  <img src="{{ profile.avatar_url }}" alt="">
+                {% else %}
+                  <span class="pin-overlay__profile-initials">{{ profile.name|slice:":1" }}</span>
+                {% endif %}
+              </span>
+              <span class="pin-overlay__profile-name">{{ profile.name }}</span>
+            </button>
+          </li>
+        {% empty %}
+          <li class="empty-state">No household members yet.</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="pin-overlay__step pin-overlay__step--pin" data-step="pin" hidden>
+      <p class="pin-overlay__pin-label">Enter your 4-digit PIN</p>
+      <div class="pin-overlay__pin-display" aria-live="polite">
+        <span class="pin-overlay__pin-dot" data-filled="false"></span>
+        <span class="pin-overlay__pin-dot" data-filled="false"></span>
+        <span class="pin-overlay__pin-dot" data-filled="false"></span>
+        <span class="pin-overlay__pin-dot" data-filled="false"></span>
+      </div>
+      <p class="pin-overlay__error" data-pin-error hidden></p>
+      <div class="pin-overlay__keypad">
+        {% for digit in "123456789" %}
+          <button type="button" class="pin-overlay__key" data-digit="{{ digit }}">{{ digit }}</button>
+        {% endfor %}
+        <button type="button" class="pin-overlay__key pin-overlay__key--wide" data-pin-back>Back</button>
+        <button type="button" class="pin-overlay__key" data-digit="0">0</button>
+        <button type="button" class="pin-overlay__key pin-overlay__key--wide" data-pin-clear>Clear</button>
+      </div>
+      <button type="button" class="action-btn pin-overlay__back-profiles" data-pin-back-profiles>
+        Choose a different member
+      </button>
+    </section>
+  </div>
+</div>

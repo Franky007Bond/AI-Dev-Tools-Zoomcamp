@@ -51,12 +51,41 @@ def log_template_chore_with_pin(*, pin: str, template: ChoreTemplate) -> ChoreIn
     )
 
 
+def log_template_chore_for_profile(
+    *, profile: Profile, pin: str, template: ChoreTemplate
+) -> ChoreInstance:
+    if not profile.check_pin(pin):
+        raise ApprovalError("Invalid PIN.")
+    chore = ChoreInstance(
+        title=template.title,
+        xp_value=template.base_xp,
+        assignee=profile,
+        template=template,
+    )
+    chore.mark_pending()
+    chore.save()
+    return chore
+
+
 def claim_open_bounty_with_pin(*, pin: str, chore: ChoreInstance) -> ChoreInstance:
     """Claim an open ad-hoc bounty and submit it as pending for the PIN holder."""
     if chore.status != ChoreStatus.OPEN:
         raise ApprovalError("Only open bounties can be logged.")
     assignee = resolve_profile_by_pin(pin)
     chore.assignee = assignee
+    chore.mark_pending()
+    chore.save()
+    return chore
+
+
+def claim_open_bounty_for_profile(
+    *, profile: Profile, pin: str, chore: ChoreInstance
+) -> ChoreInstance:
+    if not profile.check_pin(pin):
+        raise ApprovalError("Invalid PIN.")
+    if chore.status != ChoreStatus.OPEN:
+        raise ApprovalError("Only open bounties can be logged.")
+    chore.assignee = profile
     chore.mark_pending()
     chore.save()
     return chore

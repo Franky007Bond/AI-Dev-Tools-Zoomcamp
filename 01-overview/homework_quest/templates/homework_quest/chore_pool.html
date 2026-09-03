@@ -7,6 +7,7 @@
   <title>Chore Pool — Homework Quest</title>
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/chore_pool.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/pin_overlay.css' %}">
 </head>
 <body class="dashboard chore-pool">
   <header class="dashboard__header chore-pool__header">
@@ -31,13 +32,11 @@
                 <h2 class="routine-card__title">{{ routine.title }}</h2>
                 <p class="routine-card__meta">{{ routine.category }} · {{ routine.estimated_minutes }} min</p>
                 <p class="routine-card__xp">{{ routine.base_xp }} XP</p>
-                <form class="routine-card__log" method="post" action="{% url 'log_routine' routine.pk %}">
-                  {% csrf_token %}
-                  <label class="sr-only" for="pin-routine-{{ routine.pk }}">Your PIN</label>
-                  <input class="pin-input" id="pin-routine-{{ routine.pk }}" name="pin" type="password"
-                         inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="PIN" required>
-                  <button class="action-btn action-btn--primary routine-card__btn" type="submit">Log done</button>
-                </form>
+                <button type="button" class="action-btn action-btn--primary routine-card__btn"
+                        data-pin-overlay="log-routine"
+                        data-post-url="{% url 'log_routine' routine.pk %}">
+                  Log done
+                </button>
               </li>
             {% endfor %}
           </ul>
@@ -75,13 +74,11 @@
                 <h2 class="bounty-card__title">{{ bounty.title }}</h2>
                 <p class="bounty-card__xp">{{ bounty.xp_value }} XP</p>
                 <p class="bounty-card__status">Open bounty</p>
-                <form class="bounty-card__log" method="post" action="{% url 'log_bounty' bounty.pk %}">
-                  {% csrf_token %}
-                  <label class="sr-only" for="pin-bounty-{{ bounty.pk }}">Your PIN</label>
-                  <input class="pin-input" id="pin-bounty-{{ bounty.pk }}" name="pin" type="password"
-                         inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="PIN" required>
-                  <button class="action-btn routine-card__btn" type="submit">Log done</button>
-                </form>
+                <button type="button" class="action-btn routine-card__btn"
+                        data-pin-overlay="log-bounty"
+                        data-post-url="{% url 'log_bounty' bounty.pk %}">
+                  Log done
+                </button>
               </li>
             {% endfor %}
           </ul>
@@ -92,6 +89,8 @@
     {% endif %}
   </main>
 
+  {% include "homework_quest/includes/pin_overlay.html" %}
   <script src="{% static 'homework_quest/chore_pool.js' %}"></script>
+  <script src="{% static 'homework_quest/pin_overlay.js' %}"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
   <title>Review Pending — Homework Quest</title>
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/review_pending.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/pin_overlay.css' %}">
 </head>
 <body class="dashboard review-pending">
   <header class="dashboard__header review-pending__header">
@@ -67,5 +68,8 @@
       <p class="empty-state">Nothing waiting for review. Nice work!</p>
     {% endif %}
   </main>
+
+  {% include "homework_quest/includes/pin_overlay.html" %}
+  <script src="{% static 'homework_quest/pin_overlay.js' %}"></script>
 </body>
 </html>
