@@ -17,11 +17,25 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from homework_quest.views import dashboard_view
+from homework_quest.views import (
+    chore_pool_view,
+    create_adhoc_bounty_view,
+    dashboard_view,
+    log_bounty_view,
+    log_routine_view,
+)
 
 urlpatterns = [
     path('', dashboard_view, name='dashboard'),
     path('dashboard/', dashboard_view, name='dashboard-alt'),
+    path('chore-pool/', chore_pool_view, name='chore_pool'),
+    path('chore-pool/bounty/', create_adhoc_bounty_view, name='create_adhoc_bounty'),
+    path(
+        'chore-pool/log-routine/<int:template_id>/',
+        log_routine_view,
+        name='log_routine',
+    ),
+    path('chore-pool/log-bounty/<int:chore_id>/', log_bounty_view, name='log_bounty'),
     path('admin/', admin.site.urls),
     path('api/', include('homework_quest.api_urls')),
 ]

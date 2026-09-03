@@ -1,17 +1,70 @@
 import json
 
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
+from homework_quest.chore_pool import build_chore_pool_context
 from homework_quest.dashboard import build_dashboard_context
-from homework_quest.models import ChoreInstance, Profile
-from homework_quest.services import ApprovalError, log_chore, peer_approve
+from homework_quest.models import ChoreInstance, ChoreStatus, ChoreTemplate, Profile
+from homework_quest.services import (
+    ApprovalError,
+    claim_open_bounty_with_pin,
+    create_adhoc_bounty,
+    log_chore,
+    log_template_chore_with_pin,
+    peer_approve,
+)
 
 
 def dashboard_view(request):
     return render(request, "homework_quest/dashboard.html", build_dashboard_context())
+
+
+def chore_pool_view(request):
+    tab = request.GET.get("tab", "routines")
+    if tab not in {"routines", "bounties"}:
+        tab = "routines"
+    return render(
+        request,
+        "homework_quest/chore_pool.html",
+        build_chore_pool_context(active_tab=tab),
+    )
+
+
+@require_POST
+def create_adhoc_bounty_view(request):
+    try:
+        create_adhoc_bounty(
+            title=request.POST.get("title", ""),
+            _category=request.POST.get("category", ""),
+            estimated_minutes=int(request.POST.get("estimated_minutes", 0)),
+        )
+    except (ApprovalError, TypeError, ValueError):
+        return redirect(f"{reverse('chore_pool')}?tab=bounties&error=1")
+    return redirect(f"{reverse('chore_pool')}?tab=bounties")
+
+
+@require_POST
+def log_routine_view(request, template_id):
+    try:
+        template = ChoreTemplate.objects.get(pk=template_id)
+        log_template_chore_with_pin(pin=request.POST.get("pin", ""), template=template)
+    except (ChoreTemplate.DoesNotExist, ApprovalError):
+        return redirect(f"{reverse('chore_pool')}?tab=routines&error=1")
+    return redirect("dashboard")
+
+
+@require_POST
+def log_bounty_view(request, chore_id):
+    try:
+        chore = ChoreInstance.objects.get(pk=chore_id, status=ChoreStatus.OPEN)
+        claim_open_bounty_with_pin(pin=request.POST.get("pin", ""), chore=chore)
+    except (ChoreInstance.DoesNotExist, ApprovalError):
+        return redirect(f"{reverse('chore_pool')}?tab=bounties&error=1")
+    return redirect("dashboard")
 
 
 def _parse_json(request):

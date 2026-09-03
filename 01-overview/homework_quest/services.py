@@ -1,10 +1,78 @@
 from django.utils import timezone
 
-from homework_quest.models import ApprovalSource, ChoreInstance, ChoreStatus, Profile
+from homework_quest.models import (
+    ApprovalSource,
+    ChoreInstance,
+    ChoreStatus,
+    ChoreTemplate,
+    Profile,
+)
+from homework_quest.xp import xp_from_minutes
 
 
 class ApprovalError(Exception):
     pass
+
+
+def resolve_profile_by_pin(pin: str) -> Profile:
+    """Return the household member matching a 4-digit PIN."""
+    for profile in Profile.objects.all():
+        if profile.check_pin(pin):
+            return profile
+    raise ApprovalError("Invalid PIN.")
+
+
+def log_chore_with_pin(
+    *,
+    pin: str,
+    title: str,
+    xp_value: int,
+    template: ChoreTemplate | None = None,
+) -> ChoreInstance:
+    """Identify the member by PIN, then create a pending chore instance."""
+    assignee = resolve_profile_by_pin(pin)
+    chore = ChoreInstance(
+        title=title,
+        xp_value=xp_value,
+        assignee=assignee,
+        template=template,
+    )
+    chore.mark_pending()
+    chore.save()
+    return chore
+
+
+def log_template_chore_with_pin(*, pin: str, template: ChoreTemplate) -> ChoreInstance:
+    return log_chore_with_pin(
+        pin=pin,
+        title=template.title,
+        xp_value=template.base_xp,
+        template=template,
+    )
+
+
+def claim_open_bounty_with_pin(*, pin: str, chore: ChoreInstance) -> ChoreInstance:
+    """Claim an open ad-hoc bounty and submit it as pending for the PIN holder."""
+    if chore.status != ChoreStatus.OPEN:
+        raise ApprovalError("Only open bounties can be logged.")
+    assignee = resolve_profile_by_pin(pin)
+    chore.assignee = assignee
+    chore.mark_pending()
+    chore.save()
+    return chore
+
+
+def create_adhoc_bounty(*, title: str, _category: str = "", estimated_minutes: int) -> ChoreInstance:
+    """Post an unassigned ad-hoc bounty to the board."""
+    if not title.strip():
+        raise ApprovalError("Title is required.")
+    if estimated_minutes <= 0:
+        raise ApprovalError("Estimated minutes must be positive.")
+    return ChoreInstance.objects.create(
+        title=title.strip(),
+        xp_value=xp_from_minutes(estimated_minutes),
+        status=ChoreStatus.OPEN,
+    )
 
 
 def log_chore(assignee: Profile, pin: str, title: str, xp_value: int) -> ChoreInstance:

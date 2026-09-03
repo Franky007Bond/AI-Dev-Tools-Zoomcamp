@@ -1,0 +1,174 @@
+/* Chore pool — extends dashboard tablet styles */
+
+.chore-pool__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chore-pool__back {
+  color: #58a6ff;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.chore-pool__tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  background: #161b22;
+}
+
+.chore-pool__tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.85rem 1rem;
+  border-radius: 8px 8px 0 0;
+  background: #21262d;
+  color: #8b949e;
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid transparent;
+  border-bottom: none;
+}
+
+.chore-pool__tab--active {
+  background: #0d1117;
+  color: #f5f5f5;
+  border-color: #30363d;
+}
+
+.chore-pool__main {
+  flex: 1;
+  padding: 1rem 1.5rem 1.5rem;
+  overflow-y: auto;
+}
+
+.routine-grid,
+.bounty-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.routine-card,
+.bounty-card {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.routine-card__title,
+.bounty-card__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.routine-card__meta,
+.bounty-card__status {
+  margin: 0 0 0.5rem;
+  color: #8b949e;
+  font-size: 0.95rem;
+}
+
+.routine-card__xp,
+.bounty-card__xp {
+  margin: 0 0 1rem;
+  color: #58a6ff;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.routine-card__log,
+.bounty-card__log {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.pin-input {
+  flex: 0 0 5rem;
+  min-height: 52px;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  text-align: center;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #f5f5f5;
+}
+
+.routine-card__btn {
+  flex: 1;
+  min-height: 52px;
+  font-size: 1rem;
+}
+
+.bounty-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bounty-creator {
+  background: #161b22;
+  border: 2px solid #30363d;
+  border-radius: 12px;
+  padding: 0 1rem 1rem;
+}
+
+.bounty-creator__summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1rem 0;
+}
+
+.bounty-creator__form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 480px;
+}
+
+.field-label {
+  font-weight: 600;
+  color: #c9d1d9;
+}
+
+.field-input {
+  min-height: 48px;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #f5f5f5;
+}
+
+.effort-slider {
+  width: 100%;
+  height: 2rem;
+  accent-color: #58a6ff;
+}
+
+.field-hint {
+  margin: 0;
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
