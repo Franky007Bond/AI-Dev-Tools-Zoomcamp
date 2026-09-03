@@ -23,6 +23,7 @@ from homework_quest.views import (
     dashboard_view,
     log_bounty_view,
     log_routine_view,
+    review_pending_view,
 )
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
         name='log_routine',
     ),
     path('chore-pool/log-bounty/<int:chore_id>/', log_bounty_view, name='log_bounty'),
+    path('review-pending/', review_pending_view, name='review_pending'),
     path('admin/', admin.site.urls),
     path('api/', include('homework_quest.api_urls')),
 ]

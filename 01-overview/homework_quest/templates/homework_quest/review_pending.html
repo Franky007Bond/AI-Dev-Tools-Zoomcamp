@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review Pending — Homework Quest</title>
+  <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/review_pending.css' %}">
+</head>
+<body class="dashboard review-pending">
+  <header class="dashboard__header review-pending__header">
+    <a class="review-pending__back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+    <h1 class="dashboard__title">Review Pending</h1>
+  </header>
+
+  <main class="review-pending__main">
+    <p class="review-pending__intro">
+      Peer-approve chores within {{ auto_approve_hours }} hours or they auto-grant XP.
+    </p>
+
+    {% if queue_items %}
+      <ul class="review-queue">
+        {% for item in queue_items %}
+          <li class="review-card{% if item.nearing_auto_approve %} review-card--nearing{% endif %}">
+            {% if item.nearing_auto_approve %}
+              <p class="review-card__flag">Nearing auto-approve</p>
+            {% endif %}
+
+            <div class="review-card__avatar" aria-hidden="true">
+              {% if item.assignee and item.assignee.avatar_url %}
+                <img src="{{ item.assignee.avatar_url }}" alt="">
+              {% else %}
+                <span class="review-card__initials">{{ item.assignee_name|slice:":1" }}</span>
+              {% endif %}
+            </div>
+
+            <div class="review-card__body">
+              <h2 class="review-card__title">{{ item.chore.title }}</h2>
+              <p class="review-card__meta">
+                {{ item.assignee_name }} · {{ item.chore.xp_value }} XP
+              </p>
+              {% if item.chore.submitted_at %}
+                <time class="review-card__submitted" datetime="{{ item.chore.submitted_at|date:'c' }}">
+                  Submitted {{ item.chore.submitted_at|date:"M j, g:i A" }}
+                </time>
+              {% endif %}
+
+              <div class="review-card__timeout" role="progressbar"
+                   aria-valuenow="{{ item.timeout_progress }}" aria-valuemin="0" aria-valuemax="100"
+                   aria-label="24-hour auto-approve timeout">
+                <div class="review-card__timeout-fill" style="width: {{ item.timeout_progress }}%;"></div>
+              </div>
+              <p class="review-card__timeout-label">{{ item.timeout_progress }}% of {{ auto_approve_hours }}-hour window</p>
+            </div>
+
+            <button type="button" class="action-btn review-card__approve"
+                    data-pin-overlay="approve"
+                    data-chore-id="{{ item.chore.pk }}"
+                    data-approve-url="{% url 'approve_chore' item.chore.pk %}">
+              Approve
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">Nothing waiting for review. Nice work!</p>
+    {% endif %}
+  </main>
+</body>
+</html>

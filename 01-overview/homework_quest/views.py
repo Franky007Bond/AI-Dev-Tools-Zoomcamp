@@ -8,6 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from homework_quest.chore_pool import build_chore_pool_context
 from homework_quest.dashboard import build_dashboard_context
+from homework_quest.review_queue import build_review_queue_context
 from homework_quest.models import ChoreInstance, ChoreStatus, ChoreTemplate, Profile
 from homework_quest.services import (
     ApprovalError,
@@ -31,6 +32,14 @@ def chore_pool_view(request):
         request,
         "homework_quest/chore_pool.html",
         build_chore_pool_context(active_tab=tab),
+    )
+
+
+def review_pending_view(request):
+    return render(
+        request,
+        "homework_quest/review_pending.html",
+        build_review_queue_context(),
     )
 
 
