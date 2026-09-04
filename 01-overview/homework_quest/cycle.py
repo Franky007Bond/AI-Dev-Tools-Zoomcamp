@@ -75,3 +75,21 @@ def close_weekly_cycle(*, now=None, rng: random.Random | None = None) -> tuple[W
         )
 
     return cycle, new_cycle
+
+
+def bootstrap_weekly_cycle(*, rng: random.Random | None = None) -> WeeklyCycle | None:
+    """Create the first open cycle when none exists."""
+    if get_open_cycle() is not None:
+        return None
+
+    rng = rng or random.Random()
+    active_perks = list(Perk.objects.filter(is_active=True))
+    if not active_perks:
+        raise CycleError("No active perks available to bootstrap a cycle.")
+
+    now = timezone.now()
+    return WeeklyCycle.objects.create(
+        start_time=now,
+        end_time=next_sunday_midnight(now),
+        selected_perk=rng.choice(active_perks),
+    )

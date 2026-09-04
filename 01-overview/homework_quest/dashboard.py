@@ -74,3 +74,39 @@ def build_dashboard_context() -> dict:
         "countdown": countdown,
         "feed_items": feed_items,
     }
+
+
+def build_dashboard_json() -> dict:
+    """JSON payload for dashboard polling."""
+    context = build_dashboard_context()
+    latest = (
+        ChoreInstance.objects.filter(submitted_at__isnull=False)
+        .order_by("-submitted_at")
+        .values_list("submitted_at", flat=True)
+        .first()
+    )
+    revision = latest.isoformat() if latest else ""
+    stake = context["stake"]
+    return {
+        "revision": revision,
+        "countdown": context["countdown"],
+        "stake_title": stake.title if stake else None,
+        "standings": [
+            {
+                "name": row["profile"].name,
+                "xp": row["xp"],
+                "progress_vs_leader": row["progress_vs_leader"],
+                "initial": row["profile"].name[:1],
+            }
+            for row in context["standings"]
+        ],
+        "feed": [
+            {
+                "title": item["chore"].title,
+                "assignee_name": item["assignee_name"],
+                "xp_value": item["chore"].xp_value,
+                "status_label": item["status_label"],
+            }
+            for item in context["feed_items"]
+        ],
+    }

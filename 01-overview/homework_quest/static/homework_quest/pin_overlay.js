@@ -102,13 +102,46 @@
 
   function submitApprove() {
     var url = pendingAction.approveUrl;
+    var request = {
+      kind: "approve",
+      url: url,
+      contentType: "json",
+      body: {
+        approver_id: parseInt(selectedProfileId, 10),
+        pin: pinDigits,
+      },
+    };
+
+    function onSuccess() {
+      if (window.HomeworkQuestArcade) {
+        window.HomeworkQuestArcade.playApproveSound();
+        window.HomeworkQuestArcade.launchConfetti(1200);
+      }
+      window.setTimeout(function () {
+        window.location.href = "/?approved=1";
+      }, 350);
+    }
+
+    if (window.HomeworkQuestOfflineQueue) {
+      window.HomeworkQuestOfflineQueue.queueOrSend(
+        request,
+        onSuccess,
+        function () {
+          showError("Saved offline — will retry when back online.");
+          resetPinEntry();
+        },
+        function () {
+          showError("Network error. Try again.");
+          resetPinEntry();
+        }
+      );
+      return;
+    }
+
     fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        approver_id: parseInt(selectedProfileId, 10),
-        pin: pinDigits,
-      }),
+      body: JSON.stringify(request.body),
     })
       .then(function (response) {
         return response.json().then(function (body) {
@@ -117,13 +150,7 @@
       })
       .then(function (result) {
         if (result.ok) {
-          if (window.HomeworkQuestArcade) {
-            window.HomeworkQuestArcade.playApproveSound();
-            window.HomeworkQuestArcade.launchConfetti(1200);
-          }
-          window.setTimeout(function () {
-            window.location.href = "/?approved=1";
-          }, 350);
+          onSuccess();
           return;
         }
         showError(result.body.error || "Could not complete action.");
@@ -136,6 +163,37 @@
   }
 
   function submitFormPost() {
+    var request = {
+      kind: "log-form",
+      url: pendingAction.postUrl,
+      contentType: "form",
+      body: {
+        profile_id: selectedProfileId,
+        pin: pinDigits,
+        csrfmiddlewaretoken: getCsrfToken(),
+      },
+    };
+
+    function onSuccess(response) {
+      window.location.href = (response && response.url) || "/";
+    }
+
+    if (window.HomeworkQuestOfflineQueue) {
+      window.HomeworkQuestOfflineQueue.queueOrSend(
+        request,
+        onSuccess,
+        function () {
+          showError("Saved offline — will retry when back online.");
+          resetPinEntry();
+        },
+        function () {
+          showError("Network error. Try again.");
+          resetPinEntry();
+        }
+      );
+      return;
+    }
+
     var formData = new FormData();
     formData.append("profile_id", selectedProfileId);
     formData.append("pin", pinDigits);
@@ -148,7 +206,7 @@
     })
       .then(function (response) {
         if (response.ok || response.redirected || response.status === 302) {
-          window.location.href = response.url || "/";
+          onSuccess(response);
           return;
         }
         showError("Could not complete action.");

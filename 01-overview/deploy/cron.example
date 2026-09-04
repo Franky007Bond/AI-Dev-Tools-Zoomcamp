@@ -1,0 +1,8 @@
+# Homework Quest — example OS cron entries (Task 37)
+# Install with: crontab deploy/cron.example
+#
+# Hourly auto-approve safety net:
+0 * * * * cd /path/to/01-overview && uv run python manage.py auto_approve_chores >> /var/log/homework_quest_auto_approve.log 2>&1
+#
+# Weekly reset — Sunday 00:00:
+0 0 * * 0 cd /path/to/01-overview && uv run python manage.py reset_weekly_cycle >> /var/log/homework_quest_reset.log 2>&1

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from homework_quest.chore_pool import build_chore_pool_context
-from homework_quest.dashboard import build_dashboard_context
+from homework_quest.dashboard import build_dashboard_context, build_dashboard_json
 from homework_quest.pin_overlay import build_pin_overlay_context
 from homework_quest.review_queue import build_review_queue_context
 from homework_quest.models import ChoreInstance, ChoreStatus, ChoreTemplate, Profile
@@ -27,6 +27,12 @@ def dashboard_view(request):
     context = build_dashboard_context()
     context["show_approved"] = request.GET.get("approved") == "1"
     return render(request, "homework_quest/dashboard.html", context)
+
+
+@csrf_exempt
+@require_GET
+def dashboard_json_view(request):
+    return JsonResponse(build_dashboard_json())
 
 
 def chore_pool_view(request):

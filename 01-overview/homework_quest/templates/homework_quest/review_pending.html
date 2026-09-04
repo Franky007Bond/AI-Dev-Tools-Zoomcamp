@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/review_pending.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/pin_overlay.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/tablet.css' %}">
 </head>
 <body class="dashboard review-pending" data-arcade="review">
   <header class="dashboard__header review-pending__header">
@@ -71,6 +72,7 @@
 
   {% include "homework_quest/includes/pin_overlay.html" %}
   <canvas id="arcade-confetti" class="arcade-confetti" aria-hidden="true"></canvas>
+  <script src="{% static 'homework_quest/offline_queue.js' %}"></script>
   <script src="{% static 'homework_quest/arcade.js' %}"></script>
   <script src="{% static 'homework_quest/pin_overlay.js' %}"></script>
 </body>

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Homework Quest</title>
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/tablet.css' %}">
 </head>
 <body class="dashboard" data-arcade="dashboard"{% if show_approved %} data-approved="true"{% endif %}>
   <header class="dashboard__header">
@@ -18,17 +19,17 @@
       <div class="stake-banner">
         <h2 class="stake-banner__label">This week&apos;s stake</h2>
         {% if stake %}
-          <p class="stake-banner__title">{{ stake.title }}</p>
+          <p class="stake-banner__title" id="dashboard-stake-title">{{ stake.title }}</p>
         {% else %}
-          <p class="stake-banner__title stake-banner__title--empty">No stake selected yet</p>
+          <p class="stake-banner__title stake-banner__title--empty" id="dashboard-stake-title">No stake selected yet</p>
         {% endif %}
-        <p class="stake-banner__countdown">{{ countdown }}</p>
+        <p class="stake-banner__countdown" id="dashboard-countdown">{{ countdown }}</p>
         <a class="stake-banner__ceremony" href="{% url 'ceremony' %}">Weekly ceremony</a>
       </div>
 
       <h2 class="panel-heading">Leaderboard</h2>
       {% if standings %}
-        <ol class="leaderboard">
+        <ol class="leaderboard" id="dashboard-leaderboard">
           {% for row in standings %}
             <li class="leaderboard__row">
               <div class="leaderboard__avatar" aria-hidden="true">
@@ -49,14 +50,16 @@
           {% endfor %}
         </ol>
       {% else %}
-        <p class="empty-state">Add household members to start the competition.</p>
+        <ol class="leaderboard" id="dashboard-leaderboard">
+          <li class="empty-state">Add household members to start the competition.</li>
+        </ol>
       {% endif %}
     </section>
 
     <section class="dashboard__panel dashboard__panel--right" aria-label="Activity feed">
       <h2 class="panel-heading">Activity</h2>
       {% if feed_items %}
-        <ul class="activity-feed">
+        <ul class="activity-feed" id="dashboard-feed">
           {% for item in feed_items %}
             <li class="activity-feed__item">
               <div class="activity-feed__body">
@@ -68,7 +71,9 @@
           {% endfor %}
         </ul>
       {% else %}
-        <p class="empty-state">No chores logged yet this week.</p>
+        <ul class="activity-feed" id="dashboard-feed">
+          <li class="empty-state">No chores logged yet this week.</li>
+        </ul>
       {% endif %}
     </section>
   </main>
@@ -81,5 +86,6 @@
 
   <canvas id="arcade-confetti" class="arcade-confetti" aria-hidden="true"></canvas>
   <script src="{% static 'homework_quest/arcade.js' %}"></script>
+  <script src="{% static 'homework_quest/dashboard.js' %}"></script>
 </body>
 </html>

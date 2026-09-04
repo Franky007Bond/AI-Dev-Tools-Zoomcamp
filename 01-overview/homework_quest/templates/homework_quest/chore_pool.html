@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/chore_pool.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/pin_overlay.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/tablet.css' %}">
 </head>
 <body class="dashboard chore-pool">
   <header class="dashboard__header chore-pool__header">
@@ -90,6 +91,7 @@
   </main>
 
   {% include "homework_quest/includes/pin_overlay.html" %}
+  <script src="{% static 'homework_quest/offline_queue.js' %}"></script>
   <script src="{% static 'homework_quest/chore_pool.js' %}"></script>
   <script src="{% static 'homework_quest/pin_overlay.js' %}"></script>
 </body>

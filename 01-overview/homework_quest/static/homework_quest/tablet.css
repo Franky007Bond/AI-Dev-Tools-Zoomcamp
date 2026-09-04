@@ -1,0 +1,49 @@
+/* Shared tablet landscape tuning — see CSS.md */
+
+@media (min-width: 1280px) {
+  body.dashboard {
+    font-size: 19px;
+  }
+
+  .dashboard__main {
+    max-height: calc(100vh - 140px);
+  }
+
+  .action-btn {
+    min-height: 68px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  body.dashboard {
+    font-size: 20px;
+  }
+
+  .dashboard__panel {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (min-height: 800px) and (orientation: landscape) {
+  .dashboard__main,
+  .chore-pool__main,
+  .review-pending__main,
+  .settings__main,
+  .ceremony__main {
+    padding-top: 1.25rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+/* Ensure no tiny text links on tablet UI */
+a:not(.action-btn):not(.settings__back):not(.chore-pool__back):not(.review-pending__back) {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pin-overlay__key {
+  min-height: 72px;
+  min-width: 72px;
+}
