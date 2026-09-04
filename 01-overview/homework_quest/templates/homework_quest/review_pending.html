@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="{% static 'homework_quest/review_pending.css' %}">
   <link rel="stylesheet" href="{% static 'homework_quest/pin_overlay.css' %}">
 </head>
-<body class="dashboard review-pending">
+<body class="dashboard review-pending" data-arcade="review">
   <header class="dashboard__header review-pending__header">
     <a class="review-pending__back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
     <h1 class="dashboard__title">Review Pending</h1>
@@ -70,6 +70,8 @@
   </main>
 
   {% include "homework_quest/includes/pin_overlay.html" %}
+  <canvas id="arcade-confetti" class="arcade-confetti" aria-hidden="true"></canvas>
+  <script src="{% static 'homework_quest/arcade.js' %}"></script>
   <script src="{% static 'homework_quest/pin_overlay.js' %}"></script>
 </body>
 </html>

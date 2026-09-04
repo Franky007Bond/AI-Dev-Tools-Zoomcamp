@@ -24,7 +24,9 @@ from homework_quest.services import (
 
 
 def dashboard_view(request):
-    return render(request, "homework_quest/dashboard.html", build_dashboard_context())
+    context = build_dashboard_context()
+    context["show_approved"] = request.GET.get("approved") == "1"
+    return render(request, "homework_quest/dashboard.html", context)
 
 
 def chore_pool_view(request):

@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from homework_quest.ceremony_views import ceremony_view, start_new_cycle_view
 from homework_quest.settings_views import (
     settings_logout_view,
     settings_member_create_view,
@@ -49,6 +50,8 @@ urlpatterns = [
     ),
     path('chore-pool/log-bounty/<int:chore_id>/', log_bounty_view, name='log_bounty'),
     path('review-pending/', review_pending_view, name='review_pending'),
+    path('ceremony/', ceremony_view, name='ceremony'),
+    path('ceremony/start/', start_new_cycle_view, name='start_new_cycle'),
     path('settings/', settings_view, name='settings'),
     path('settings/unlock/', settings_unlock_view, name='settings_unlock'),
     path('settings/logout/', settings_logout_view, name='settings_logout'),

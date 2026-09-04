@@ -7,7 +7,7 @@
   <title>Homework Quest</title>
   <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
 </head>
-<body class="dashboard">
+<body class="dashboard" data-arcade="dashboard"{% if show_approved %} data-approved="true"{% endif %}>
   <header class="dashboard__header">
     <h1 class="dashboard__title">Homework Quest</h1>
     <a class="settings__back" href="{% url 'settings' %}">Settings</a>
@@ -23,6 +23,7 @@
           <p class="stake-banner__title stake-banner__title--empty">No stake selected yet</p>
         {% endif %}
         <p class="stake-banner__countdown">{{ countdown }}</p>
+        <a class="stake-banner__ceremony" href="{% url 'ceremony' %}">Weekly ceremony</a>
       </div>
 
       <h2 class="panel-heading">Leaderboard</h2>
@@ -77,5 +78,8 @@
     <a class="action-btn" href="{% url 'review_pending' %}">Review Pending</a>
     <a class="action-btn" href="{% url 'chore_pool' %}">Chore Pool</a>
   </nav>
+
+  <canvas id="arcade-confetti" class="arcade-confetti" aria-hidden="true"></canvas>
+  <script src="{% static 'homework_quest/arcade.js' %}"></script>
 </body>
 </html>

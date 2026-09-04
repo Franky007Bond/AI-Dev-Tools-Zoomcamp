@@ -117,7 +117,13 @@
       })
       .then(function (result) {
         if (result.ok) {
-          window.location.href = "/";
+          if (window.HomeworkQuestArcade) {
+            window.HomeworkQuestArcade.playApproveSound();
+            window.HomeworkQuestArcade.launchConfetti(1200);
+          }
+          window.setTimeout(function () {
+            window.location.href = "/?approved=1";
+          }, 350);
           return;
         }
         showError(result.body.error || "Could not complete action.");

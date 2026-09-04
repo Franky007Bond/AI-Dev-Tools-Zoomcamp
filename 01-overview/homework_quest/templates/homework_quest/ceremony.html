@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weekly Ceremony — Homework Quest</title>
+  <link rel="stylesheet" href="{% static 'homework_quest/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'homework_quest/ceremony.css' %}">
+</head>
+<body class="dashboard ceremony"
+      data-arcade="ceremony"
+      {% if celebrating %}data-celebration="true"{% endif %}
+      data-perk-titles="{% for perk in active_perks %}{{ perk.title }}{% if not forloop.last %}|{% endif %}{% endfor %}"
+      {% if revealed_perk %}data-revealed-perk="{{ revealed_perk.title }}"{% endif %}
+      data-spin-wheel="{% if celebrating %}true{% else %}false{% endif %}">
+  <header class="dashboard__header ceremony__header">
+    <a class="settings__back" href="{% url 'dashboard' %}">&larr; Dashboard</a>
+    <h1 class="dashboard__title">Weekly Ceremony</h1>
+  </header>
+
+  <main class="ceremony__main">
+    {% if reset_error %}
+      <p class="ceremony__error" role="alert">Could not start a new cycle. Check that a cycle and active perks exist.</p>
+    {% endif %}
+
+    {% if celebrating %}
+      <section class="ceremony__banner ceremony__banner--celebrate" aria-live="polite">
+        <h2 class="ceremony__headline">Week complete!</h2>
+        {% if shared_victory %}
+          <p class="ceremony__subhead">Shared victory — crowning {{ winners|length }} champions</p>
+        {% else %}
+          <p class="ceremony__subhead">Crowning this week&apos;s champion</p>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="ceremony__banner">
+        <h2 class="ceremony__headline">Final standings</h2>
+        <p class="ceremony__subhead">Review the board, then start the next cycle when ready.</p>
+      </section>
+    {% endif %}
+
+    <section class="ceremony__standings" aria-labelledby="standings-heading">
+      <h2 id="standings-heading" class="panel-heading">Leaderboard</h2>
+      {% if standings %}
+        <ol class="ceremony-standings">
+          {% for row in standings %}
+            <li class="ceremony-standings__row{% if row.is_winner %} ceremony-standings__row--winner{% endif %}">
+              {% if row.is_winner %}
+                <span class="ceremony-crown" aria-label="Winner">&#9733;</span>
+              {% endif %}
+              <span class="ceremony-standings__name">{{ row.name }}</span>
+              <span class="ceremony-standings__xp">{{ row.xp }} XP</span>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="empty-state">No members yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="ceremony__wheel" aria-labelledby="wheel-heading">
+      <h2 id="wheel-heading" class="panel-heading">{% if celebrating %}Next stake{% else %}This week&apos;s stake{% endif %}</h2>
+      <div class="perk-wheel">
+        <div class="perk-wheel__window">
+          <p class="perk-wheel__label" id="perk-wheel-display">
+            {% if revealed_perk %}{{ revealed_perk.title }}{% else %}No perk drawn yet{% endif %}
+          </p>
+        </div>
+      </div>
+      {% if revealed_perk and revealed_perk.description %}
+        <p class="ceremony__perk-desc">{{ revealed_perk.description }}</p>
+      {% endif %}
+    </section>
+
+    <form class="ceremony__start" method="post" action="{% url 'start_new_cycle' %}">
+      {% csrf_token %}
+      <button type="submit" class="action-btn action-btn--primary ceremony__start-btn">
+        Start New Cycle
+      </button>
+      <p class="ceremony__start-note">Runs the same reset service as the weekly scheduler.</p>
+    </form>
+  </main>
+
+  <canvas id="arcade-confetti" class="arcade-confetti" aria-hidden="true"></canvas>
+  <script src="{% static 'homework_quest/arcade.js' %}"></script>
+  <script src="{% static 'homework_quest/ceremony.js' %}"></script>
+</body>
+</html>
