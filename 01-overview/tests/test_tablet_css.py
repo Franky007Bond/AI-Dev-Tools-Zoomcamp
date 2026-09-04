@@ -1,12 +1,12 @@
-from pathlib import Path
-
 import pytest
 from django.test import Client
+
+from tests.paths import STATIC_DIR
 
 
 @pytest.mark.django_db
 def test_tablet_css_readme_exists():
-    css_readme = Path(__file__).resolve().parent / "static" / "homework_quest" / "CSS.md"
+    css_readme = STATIC_DIR / "CSS.md"
     assert css_readme.exists()
     text = css_readme.read_text(encoding="utf-8")
     assert "1280" in text

@@ -1,8 +1,8 @@
-from pathlib import Path
+from tests.paths import STATIC_DIR
 
 
 def test_offline_queue_js_module_exists():
-    path = Path(__file__).resolve().parent / "static" / "homework_quest" / "offline_queue.js"
+    path = STATIC_DIR / "offline_queue.js"
     text = path.read_text(encoding="utf-8")
     assert "HomeworkQuestOfflineQueue" in text
     assert "localStorage" in text

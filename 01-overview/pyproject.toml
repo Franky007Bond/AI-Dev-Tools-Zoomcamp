@@ -24,4 +24,5 @@ dev = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "homework_quest.test_settings"
 pythonpath = ["."]
-python_files = ["tests.py", "test_*.py", "*_test.py"]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]

@@ -50,10 +50,8 @@ def test_review_page_includes_arcade_hooks(client):
 
 @pytest.mark.django_db
 def test_arcade_js_documents_audio_fallback():
-    from pathlib import Path
+    from tests.paths import STATIC_DIR
 
-    arcade_js = (
-        Path(__file__).resolve().parent / "static" / "homework_quest" / "arcade.js"
-    ).read_text(encoding="utf-8")
+    arcade_js = (STATIC_DIR / "arcade.js").read_text(encoding="utf-8")
     assert "AudioContext" in arcade_js
     assert "suspended" in arcade_js or "blocked" in arcade_js.lower()
