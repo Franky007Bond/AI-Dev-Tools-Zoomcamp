@@ -170,7 +170,7 @@ Run every command with `uv run python manage.py <command>`.
 | `bootstrap_weekly_cycle` | Create the first open weekly cycle + perk draw (idempotent) |
 | `auto_approve_chores` | Approve pending chores past their 24-hour deadline |
 | `reset_weekly_cycle` | Close the current cycle, record winners, reset XP, draw next perk |
-| `run_scheduled_jobs` | Run all registered scheduled jobs (wrapper for cron) |
+| `run_scheduled_jobs` | Run registered jobs whose cron schedule matches the current time |
 
 ---
 
