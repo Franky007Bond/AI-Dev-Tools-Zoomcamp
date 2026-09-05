@@ -123,14 +123,25 @@ def log_chore_view(request):
     try:
         data = _parse_json(request)
         assignee = Profile.objects.get(pk=data["profile_id"])
+        template = None
+        if "template_id" in data:
+            template = ChoreTemplate.objects.get(pk=data["template_id"])
+        estimated_minutes = data.get("estimated_minutes")
+        if estimated_minutes is not None:
+            estimated_minutes = int(estimated_minutes)
+        if template is not None:
+            title = data.get("title", template.title)
+        else:
+            title = data["title"]
         chore = log_chore(
             assignee=assignee,
             pin=data["pin"],
-            title=data["title"],
-            xp_value=data["xp_value"],
+            title=title,
+            estimated_minutes=estimated_minutes,
+            template=template,
         )
         return JsonResponse(_chore_payload(chore), status=201)
-    except (KeyError, Profile.DoesNotExist, TypeError, ValueError):
+    except (KeyError, Profile.DoesNotExist, ChoreTemplate.DoesNotExist, TypeError, ValueError):
         return JsonResponse({"error": "Invalid request."}, status=400)
     except ApprovalError as exc:
         return JsonResponse({"error": str(exc)}, status=400)

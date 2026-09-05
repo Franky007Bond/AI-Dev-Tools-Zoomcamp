@@ -32,7 +32,7 @@ def test_replayed_offline_approve_post_is_accepted(client):
                 "profile_id": assignee.pk,
                 "pin": "1234",
                 "title": "Dishes",
-                "xp_value": 30,
+                "estimated_minutes": 14,
             }
         ),
         content_type="application/json",

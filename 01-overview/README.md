@@ -139,7 +139,7 @@ All API routes are under `/api/`.
 | Method | URL | Purpose |
 |--------|-----|---------|
 | `GET` | `/api/dashboard/` | JSON snapshot for dashboard polling |
-| `POST` | `/api/chores/log/` | Log a chore (JSON: `profile_id`, `pin`, `title`, `xp_value`) |
+| `POST` | `/api/chores/log/` | Log a chore (JSON: `profile_id`, `pin`, `title`, plus `estimated_minutes` or `template_id`; XP is computed server-side) |
 | `POST` | `/api/chores/<id>/approve/` | Peer-approve (JSON: `approver_id`, `pin`) |
 | `GET` | `/api/chores/<id>/` | Chore detail JSON |
 
@@ -148,7 +148,7 @@ All API routes are under `/api/`.
 ```bash
 curl -X POST http://127.0.0.1:8000/api/chores/log/ \
   -H "Content-Type: application/json" \
-  -d '{"profile_id": 1, "pin": "1234", "title": "Dishes", "xp_value": 30}'
+  -d '{"profile_id": 1, "pin": "1234", "title": "Dishes", "estimated_minutes": 14}'
 ```
 
 ### Example: peer-approve

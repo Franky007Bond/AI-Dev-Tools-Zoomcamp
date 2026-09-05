@@ -33,7 +33,7 @@ def test_dashboard_json_shows_new_feed_item_after_log(client):
                 "profile_id": assignee.pk,
                 "pin": "1234",
                 "title": "Mop floor",
-                "xp_value": 40,
+                "estimated_minutes": 19,
             }
         ),
         content_type="application/json",

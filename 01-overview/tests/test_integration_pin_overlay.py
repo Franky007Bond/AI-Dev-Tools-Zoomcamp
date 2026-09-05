@@ -4,6 +4,7 @@ import pytest
 from django.test import Client
 
 from homework_quest.models import ApprovalSource, ChoreStatus, Profile
+from homework_quest.xp import xp_from_minutes
 
 
 def _profile(name, pin):
@@ -23,6 +24,7 @@ def test_self_approve_fails_peer_approve_succeeds(client):
     """Same POST endpoints the PIN overlay uses for approval."""
     assignee = _profile("Alex", "1234")
     peer = _profile("Blake", "5678")
+    expected_xp = xp_from_minutes(14)
 
     log_response = client.post(
         "/api/chores/log/",
@@ -31,7 +33,7 @@ def test_self_approve_fails_peer_approve_succeeds(client):
                 "profile_id": assignee.pk,
                 "pin": "1234",
                 "title": "Dishes",
-                "xp_value": 30,
+                "estimated_minutes": 14,
             }
         ),
         content_type="application/json",
@@ -62,7 +64,7 @@ def test_self_approve_fails_peer_approve_succeeds(client):
 
     assert payload["status"] == ChoreStatus.APPROVED
     assert payload["approved_via"] == ApprovalSource.PEER
-    assert assignee.current_cycle_xp == 30
+    assert assignee.current_cycle_xp == expected_xp
 
 
 @pytest.mark.django_db

@@ -8,6 +8,7 @@ from django.test import Client
 from django.utils import timezone
 
 from homework_quest.models import ApprovalSource, ChoreStatus, Profile
+from homework_quest.xp import xp_from_minutes
 
 
 def _profile(name, pin):
@@ -26,6 +27,7 @@ def client():
 def test_log_then_peer_approve(client):
     assignee = _profile("Alex", "1234")
     approver = _profile("Blake", "5678")
+    expected_xp = xp_from_minutes(14)
 
     log_response = client.post(
         "/api/chores/log/",
@@ -34,12 +36,13 @@ def test_log_then_peer_approve(client):
                 "profile_id": assignee.pk,
                 "pin": "1234",
                 "title": "Dishes",
-                "xp_value": 30,
+                "estimated_minutes": 14,
             }
         ),
         content_type="application/json",
     )
     assert log_response.status_code == 201
+    assert log_response.json()["xp_value"] == expected_xp
     chore_id = log_response.json()["id"]
 
     approve_response = client.post(
@@ -55,13 +58,57 @@ def test_log_then_peer_approve(client):
 
     assert payload["status"] == ChoreStatus.APPROVED
     assert payload["approved_via"] == ApprovalSource.PEER
-    assert assignee.current_cycle_xp == 30
+    assert assignee.current_cycle_xp == expected_xp
+
+
+@pytest.mark.django_db
+def test_log_chore_ignores_client_supplied_xp_value(client):
+    """Regression: inflated xp_value in JSON must not override server-side formula."""
+    assignee = _profile("Alex", "1234")
+    expected_xp = xp_from_minutes(14)
+
+    log_response = client.post(
+        "/api/chores/log/",
+        data=json.dumps(
+            {
+                "profile_id": assignee.pk,
+                "pin": "1234",
+                "title": "Dishes",
+                "estimated_minutes": 14,
+                "xp_value": 999999,
+            }
+        ),
+        content_type="application/json",
+    )
+    assert log_response.status_code == 201
+    assert log_response.json()["xp_value"] == expected_xp
+    assert log_response.json()["xp_value"] != 999999
+
+
+@pytest.mark.django_db
+def test_log_chore_rejects_xp_value_without_minutes_or_template(client):
+    assignee = _profile("Alex", "1234")
+
+    response = client.post(
+        "/api/chores/log/",
+        data=json.dumps(
+            {
+                "profile_id": assignee.pk,
+                "pin": "1234",
+                "title": "Dishes",
+                "xp_value": 30,
+            }
+        ),
+        content_type="application/json",
+    )
+    assert response.status_code == 400
 
 
 @pytest.mark.django_db
 def test_log_then_auto_approve_after_timeout(client):
     assignee = _profile("Alex", "1234")
     start = timezone.now()
+    expected_xp = xp_from_minutes(25)
 
     with patch("django.utils.timezone.now", return_value=start):
         log_response = client.post(
@@ -71,7 +118,7 @@ def test_log_then_auto_approve_after_timeout(client):
                     "profile_id": assignee.pk,
                     "pin": "1234",
                     "title": "Vacuum",
-                    "xp_value": 50,
+                    "estimated_minutes": 25,
                 }
             ),
             content_type="application/json",
@@ -91,4 +138,4 @@ def test_log_then_auto_approve_after_timeout(client):
     assert payload["status"] == ChoreStatus.APPROVED
     assert payload["approved_via"] == ApprovalSource.AUTO
     assert payload["approver_id"] is None
-    assert assignee.current_cycle_xp == 50
+    assert assignee.current_cycle_xp == expected_xp

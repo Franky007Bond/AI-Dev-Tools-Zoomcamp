@@ -104,10 +104,38 @@ def create_adhoc_bounty(*, title: str, _category: str = "", estimated_minutes: i
     )
 
 
-def log_chore(assignee: Profile, pin: str, title: str, xp_value: int) -> ChoreInstance:
+def resolve_chore_xp(
+    *,
+    estimated_minutes: int | None = None,
+    template: ChoreTemplate | None = None,
+) -> int:
+    """Derive XP server-side from minutes or a template; never trust client values."""
+    if template is not None:
+        return template.base_xp
+    if estimated_minutes is not None:
+        if estimated_minutes <= 0:
+            raise ApprovalError("Estimated minutes must be positive.")
+        return xp_from_minutes(estimated_minutes)
+    raise ApprovalError("Either estimated_minutes or template_id is required.")
+
+
+def log_chore(
+    assignee: Profile,
+    pin: str,
+    title: str,
+    *,
+    estimated_minutes: int | None = None,
+    template: ChoreTemplate | None = None,
+) -> ChoreInstance:
     if not assignee.check_pin(pin):
         raise ApprovalError("Invalid PIN.")
-    chore = ChoreInstance(title=title, xp_value=xp_value, assignee=assignee)
+    xp_value = resolve_chore_xp(estimated_minutes=estimated_minutes, template=template)
+    chore = ChoreInstance(
+        title=title,
+        xp_value=xp_value,
+        assignee=assignee,
+        template=template,
+    )
     chore.mark_pending()
     chore.save()
     return chore
