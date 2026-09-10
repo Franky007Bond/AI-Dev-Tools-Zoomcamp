@@ -2,7 +2,7 @@
 
 Waitly is a single-restaurant, in-house web app that replaces the paper waitlist. It manages a live queue combining walk-ins and reservations, tracks tables on a visual floor plan, sends two-way SMS updates to guests, and forecasts wait times.
 
-> **Status:** Requirements stage — this README will evolve as the app is built. See [`_docs/specs.md`](_docs/specs.md) for the full v1 spec.
+> **Status:** Frontend mock is running; backend is not started. Spec: [`_docs/specs.md`](_docs/specs.md). HTTP contract: [`openapi.yaml`](openapi.yaml).
 
 ## Who it's for
 - **Host** — the only staff role in v1. Runs the queue, floor plan, and settings from a desktop/laptop browser at the host stand.
@@ -36,7 +36,15 @@ Web app, built for desktop/laptop browser use.
 - Configurable grace period and reminder cadence
 
 ## Getting started
-_Setup instructions will be added once the tech stack is chosen._
+
+```powershell
+cd frontend
+npm install
+npm run dev      # http://localhost:5173/  (guest join: /join)
+npm test
+```
+
+Agent notes (layout, git root, mock vs OpenAPI): [`AGENTS.md`](AGENTS.md).
 
 ## Contributing
 _Contribution guidelines TBD._
