@@ -1,0 +1,893 @@
+openapi: 3.1.1
+info:
+  title: Waitly API
+  version: 1.0.0
+  summary: Single-restaurant waitlist, floor plan, SMS, and wait estimates.
+  description: |
+    HTTP contract for Waitly v1. It mirrors the current frontend mock in
+    `frontend/src/api/client.js` and `frontend/src/api/mockBackend.js`, plus
+    `_docs/specs.md`.
+
+    **Product scope.** One restaurant, one host role, no guest accounts.
+    The host stand uses a snapshot of queue + floor + SMS. Guests join via
+    `/join` (QR / web form) and then talk over SMS.
+
+    **Read model.** Mutating host endpoints return a fresh `Snapshot` so the
+    UI can refresh in one round trip. `GET /snapshot` also applies due
+    reservations and no-show timeouts before responding.
+
+    **Wait estimates (rule-based, not ML).** For each waiting / notified /
+    confirmed party:
+
+    1. Consider tables with `seats >= partySize`.
+    2. If none fit, estimate is **90** minutes.
+    3. If free fitting tables exceed parties ahead in queue, estimate is
+       `5 * (partiesAhead + 1)`.
+    4. Otherwise estimate is the soonest remaining dining time on occupied
+       fitting tables (45 minute average cover, floor 5 minutes) plus
+       `10 * max(0, partiesAhead - freeFittingTables)`.
+
+    **SMS.** Join and "table ready" texts are sent automatically. Guests
+    reply **YES** (or CONFIRM) or **CANCEL**. After a ready text, if the
+    party stays `notified` past `settings.gracePeriodMinutes` (default 8),
+    they become a no-show: removed from the queue, table freed, host notice
+    created.
+
+    **Auth.** v1 has no login. Host endpoints are for the in-house stand;
+    `/join` and `/webhooks/sms` are the public/guest surfaces.
+  contact:
+    name: Waitly
+  license:
+    name: TBD
+
+servers:
+  - url: http://localhost:8000/v1
+    description: Local backend
+
+tags:
+  - name: Snapshot
+    description: Host-stand aggregate read model.
+  - name: Parties
+    description: Walk-ins, remote joins, and reservations.
+  - name: Queue
+    description: Waiting-list order.
+  - name: Tables
+    description: Floor-plan tables and seating.
+  - name: SMS
+    description: Outbound texts and inbound guest replies.
+  - name: Analytics
+    description: Daily and weekly host summary.
+  - name: Settings
+    description: Restaurant settings and demo reset.
+
+paths:
+  /snapshot:
+    get:
+      tags: [Snapshot]
+      operationId: getSnapshot
+      summary: Get the host-stand snapshot
+      description: |
+        Activates reservations whose `reservationTime` has arrived, applies
+        no-show timeouts, recomputes queue positions and wait estimates, then
+        returns the full host view.
+      responses:
+        '200':
+          description: Current snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+
+  /join:
+    post:
+      tags: [Parties]
+      operationId: joinWaitlist
+      summary: Guest joins the waitlist
+      description: |
+        Public QR / web-form join. `source` is always `remote`. Sends a join
+        SMS with the estimated wait. Returns the created party (not the full
+        host snapshot).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestJoinRequest'
+      responses:
+        '201':
+          description: Party added to the queue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /parties:
+    post:
+      tags: [Parties]
+      operationId: addParty
+      summary: Host adds a party
+      description: |
+        Host-stand add. Walk-ins and due reservations enter the queue;
+        future reservations get status `upcoming` and do not take a position
+        until `reservationTime`. If `tableId` is set, that table must be
+        `free` and becomes `reserved`. Sends a join SMS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPartyRequest'
+      responses:
+        '200':
+          description: Updated snapshot including the new party.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /parties/{partyId}:
+    parameters:
+      - $ref: '#/components/parameters/partyId'
+    patch:
+      tags: [Parties]
+      operationId: updateParty
+      summary: Edit party details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePartyRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Parties]
+      operationId: removeParty
+      summary: Remove a party from the waitlist
+      description: |
+        Sets status to `cancelled`, clears any held table, and sends a cancel
+        SMS. The party row is kept for SMS history.
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /parties/{partyId}/notify:
+    post:
+      tags: [SMS]
+      operationId: notifyReady
+      summary: Text that the table is ready
+      description: |
+        Party must be `waiting`, `notified`, or `confirmed`. Sets status to
+        `notified`, records `notifiedAt`, sends the ready SMS, and adds a
+        host notice. Grace-period no-show handling starts from `notifiedAt`.
+      parameters:
+        - $ref: '#/components/parameters/partyId'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /parties/{partyId}/seat:
+    post:
+      tags: [Tables]
+      operationId: seatParty
+      summary: Seat a party at a table
+      description: |
+        Table must exist and not be occupied. A reserved table may only be
+        used by the party it is held for. Party becomes `seated`, table
+        `occupied`, a seated analytics event is recorded, and a seated SMS
+        is sent.
+      parameters:
+        - $ref: '#/components/parameters/partyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SeatPartyRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /parties/{partyId}/sms-reply:
+    post:
+      tags: [SMS]
+      operationId: smsReply
+      summary: Simulate a guest SMS reply
+      description: |
+        Host-stand helper matching the mock UI. Production traffic should
+        use `POST /webhooks/sms` instead.
+
+        - `YES` / `CONFIRM` → status `confirmed`, inbound + thank-you SMS
+        - `CANCEL` → same as removing the party
+      parameters:
+        - $ref: '#/components/parameters/partyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsReplyRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /queue/reorder:
+    post:
+      tags: [Queue]
+      operationId: reorderQueue
+      summary: Move a party in the waiting queue
+      description: Positions are 1-based among `waiting` / `notified` / `confirmed` parties.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderQueueRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /tables/{tableId}:
+    patch:
+      tags: [Tables]
+      operationId: setTableStatus
+      summary: Change a table's status
+      description: |
+        Host taps a table on the floor plan.
+
+        - `free` clears the occupant. If a waiting party fits the seats,
+          the backend may automatically notify them that a table is ready
+          (same as `notifyReady`).
+        - `occupied` marks the table busy without changing party status.
+        - `reserved` holds the current `partyId` if any.
+      parameters:
+        - $ref: '#/components/parameters/tableId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetTableStatusRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /webhooks/sms:
+    post:
+      tags: [SMS]
+      operationId: receiveSms
+      summary: Inbound SMS from the provider
+      description: |
+        Provider-agnostic webhook. Match `from` to a party's `phone` and
+        treat `body` like `smsReply` (YES / CONFIRM / CANCEL, case
+        insensitive). Adapt field names when a concrete SMS vendor is chosen.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundSmsWebhook'
+      responses:
+        '200':
+          description: Reply handled. Snapshot is optional for the provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAck'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /analytics:
+    get:
+      tags: [Analytics]
+      operationId: getAnalytics
+      summary: Daily or weekly analytics
+      description: |
+        Applies snapshot side effects first, then summarizes seated and
+        no-show events in range. Daily uses the local start of today;
+        weekly uses the last 7 days. No CSV export in v1.
+      parameters:
+        - name: range
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AnalyticsRange'
+          description: Defaults to `daily`.
+      responses:
+        '200':
+          description: Analytics summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /settings:
+    patch:
+      tags: [Settings]
+      operationId: updateSettings
+      summary: Update restaurant settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettingsRequest'
+      responses:
+        '200':
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /demo/reset:
+    post:
+      tags: [Settings]
+      operationId: resetDemo
+      summary: Reset demo data
+      description: Development helper. Restores the seeded restaurant, parties, tables, SMS, and events.
+      responses:
+        '200':
+          description: Seeded snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+
+components:
+  parameters:
+    partyId:
+      name: partyId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Party id (opaque string; mock uses values like `p1`).
+    tableId:
+      name: tableId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Table id (opaque string; mock uses values like `t1`).
+
+  responses:
+    NotFound:
+      description: Party or table does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Operation is not allowed in the current state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Request body or parameters failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: string
+          examples: ['Party p9 not found']
+        code:
+          type: string
+          description: Optional machine-readable code.
+          examples: ['party_not_found']
+
+    PartySource:
+      type: string
+      enum: [walk-in, remote, reservation]
+
+    PartyStatus:
+      type: string
+      description: |
+        Queue statuses are `waiting`, `notified`, and `confirmed`.
+        Reservations that are not due yet are `upcoming`. Terminal statuses
+        are `seated`, `cancelled`, and `no-show`.
+      enum: [waiting, notified, confirmed, upcoming, seated, cancelled, no-show]
+
+    TableStatus:
+      type: string
+      enum: [free, occupied, reserved]
+
+    SmsDirection:
+      type: string
+      enum: [inbound, outbound]
+
+    SmsKind:
+      type: string
+      enum: [join, ready, confirm, cancel, noshow, seated]
+
+    AnalyticsRange:
+      type: string
+      enum: [daily, weekly]
+      default: daily
+
+    Settings:
+      type: object
+      additionalProperties: false
+      required: [restaurantName, gracePeriodMinutes]
+      properties:
+        restaurantName:
+          type: string
+          minLength: 1
+          examples: ['Waitly Bistro']
+        gracePeriodMinutes:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Minutes after a ready SMS before an unconfirmed party is a no-show.
+          examples: [8]
+
+    UpdateSettingsRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        restaurantName:
+          type: string
+          minLength: 1
+        gracePeriodMinutes:
+          type: integer
+          minimum: 1
+          maximum: 30
+
+    Party:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - phone
+        - partySize
+        - notes
+        - source
+        - status
+        - position
+        - queuedAt
+        - reservationTime
+        - tableId
+        - notifiedAt
+        - waitEstimateMinutes
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+          description: Guest phone. Prefer E.164 in production; mock data uses local numbers.
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 12
+        notes:
+          type: string
+        source:
+          $ref: '#/components/schemas/PartySource'
+        status:
+          $ref: '#/components/schemas/PartyStatus'
+        position:
+          type: [integer, 'null']
+          minimum: 1
+          description: 1-based queue position, or null when not in the live queue.
+        queuedAt:
+          type: string
+          format: date-time
+        reservationTime:
+          type: [string, 'null']
+          format: date-time
+        tableId:
+          type: [string, 'null']
+        notifiedAt:
+          type: [string, 'null']
+          format: date-time
+        seatedAt:
+          type: string
+          format: date-time
+        seatedWaitMinutes:
+          type: integer
+          minimum: 0
+        waitEstimateMinutes:
+          type: [integer, 'null']
+          minimum: 0
+          description: Null when the party is not in the live queue.
+
+    Table:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - seats
+        - x
+        - y
+        - w
+        - h
+        - status
+        - partyId
+        - occupiedAt
+        - partyName
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          examples: ['T1']
+        seats:
+          type: integer
+          minimum: 1
+        x:
+          type: number
+          description: Floor-plan left position as a percent of the canvas (0–100).
+        y:
+          type: number
+          description: Floor-plan top position as a percent of the canvas (0–100).
+        w:
+          type: number
+          description: Floor-plan width as a percent of the canvas.
+        h:
+          type: number
+          description: Floor-plan height as a percent of the canvas.
+        status:
+          $ref: '#/components/schemas/TableStatus'
+        partyId:
+          type: [string, 'null']
+        occupiedAt:
+          type: [string, 'null']
+          format: date-time
+        partyName:
+          type: [string, 'null']
+
+    SmsMessage:
+      type: object
+      additionalProperties: false
+      required: [id, partyId, direction, kind, body, at]
+      properties:
+        id:
+          type: string
+        partyId:
+          type: string
+        direction:
+          $ref: '#/components/schemas/SmsDirection'
+        kind:
+          $ref: '#/components/schemas/SmsKind'
+        body:
+          type: string
+        at:
+          type: string
+          format: date-time
+
+    HostNotice:
+      type: object
+      additionalProperties: false
+      required: [id, at, text]
+      properties:
+        id:
+          type: string
+        at:
+          type: string
+          format: date-time
+        text:
+          type: string
+
+    Snapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - now
+        - settings
+        - tables
+        - parties
+        - queue
+        - upcoming
+        - sms
+        - hostNotices
+      properties:
+        now:
+          type: string
+          format: date-time
+        settings:
+          $ref: '#/components/schemas/Settings'
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/Table'
+        parties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Party'
+        queue:
+          type: array
+          description: Live queue (`waiting`, `notified`, `confirmed`), sorted by position.
+          items:
+            $ref: '#/components/schemas/Party'
+        upcoming:
+          type: array
+          description: Future reservations (`upcoming`), sorted by reservationTime.
+          items:
+            $ref: '#/components/schemas/Party'
+        sms:
+          type: array
+          description: Newest messages first.
+          items:
+            $ref: '#/components/schemas/SmsMessage'
+        hostNotices:
+          type: array
+          description: Recent host alerts (no-shows, ready texts). Cap at 8.
+          items:
+            $ref: '#/components/schemas/HostNotice'
+
+    GuestJoinRequest:
+      type: object
+      additionalProperties: false
+      required: [name, phone, partySize]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          minLength: 1
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 12
+        notes:
+          type: string
+          default: ''
+
+    AddPartyRequest:
+      type: object
+      additionalProperties: false
+      required: [name, phone, partySize]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          minLength: 1
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 12
+        notes:
+          type: string
+          default: ''
+        source:
+          $ref: '#/components/schemas/PartySource'
+          default: walk-in
+        reservationTime:
+          type: [string, 'null']
+          format: date-time
+        tableId:
+          type: [string, 'null']
+          description: Optional table to hold for a reservation. Must currently be free.
+
+    UpdatePartyRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          minLength: 1
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 12
+        notes:
+          type: string
+        reservationTime:
+          type: [string, 'null']
+          format: date-time
+
+    SeatPartyRequest:
+      type: object
+      additionalProperties: false
+      required: [tableId]
+      properties:
+        tableId:
+          type: string
+
+    SmsReplyRequest:
+      type: object
+      additionalProperties: false
+      required: [reply]
+      properties:
+        reply:
+          type: string
+          description: Case-insensitive. `CONFIRM` is treated as `YES`.
+          enum: [YES, CANCEL, CONFIRM]
+
+    ReorderQueueRequest:
+      type: object
+      additionalProperties: false
+      required: [fromPosition, toPosition]
+      properties:
+        fromPosition:
+          type: integer
+          minimum: 1
+        toPosition:
+          type: integer
+          minimum: 1
+
+    SetTableStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/TableStatus'
+
+    InboundSmsWebhook:
+      type: object
+      additionalProperties: true
+      required: [from, body]
+      properties:
+        from:
+          type: string
+          description: Sender phone number.
+        body:
+          type: string
+          description: Raw message text (YES / CONFIRM / CANCEL).
+
+    WebhookAck:
+      type: object
+      additionalProperties: false
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        partyId:
+          type: [string, 'null']
+
+    HourBucket:
+      type: object
+      additionalProperties: false
+      required: [hour, label, count]
+      properties:
+        hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+        label:
+          type: string
+          examples: ['7pm']
+        count:
+          type: integer
+          minimum: 0
+
+    DayBucket:
+      type: object
+      additionalProperties: false
+      required: [weekday, label, count]
+      properties:
+        weekday:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: JavaScript-style weekday; 0 is Sunday.
+        label:
+          type: string
+          examples: ['Fri']
+        count:
+          type: integer
+          minimum: 0
+
+    Analytics:
+      type: object
+      additionalProperties: false
+      required:
+        - range
+        - averageWaitMinutes
+        - partiesSeated
+        - noShowRate
+        - busiestHours
+        - busiestDays
+      properties:
+        range:
+          $ref: '#/components/schemas/AnalyticsRange'
+        averageWaitMinutes:
+          type: integer
+          minimum: 0
+          description: Rounded mean `waitMinutes` of seated events in range. 0 if none.
+        partiesSeated:
+          type: integer
+          minimum: 0
+        noShowRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: no-shows / (seated + no-shows). 0 if there are no outcomes.
+        busiestHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/HourBucket'
+        busiestDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayBucket'
+          minItems: 7
+          maxItems: 7
