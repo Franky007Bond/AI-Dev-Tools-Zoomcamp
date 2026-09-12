@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { STORAGE_KEY } from '../api/mockBackend.js'
 
 export function useWaitly(api) {
   const [snapshot, setSnapshot] = useState(null)
@@ -42,13 +41,8 @@ export function useWaitly(api) {
     const timer = setInterval(() => {
       refresh().catch(() => {})
     }, 4000)
-    const onStorage = (event) => {
-      if (event.key === STORAGE_KEY) refresh().catch(() => {})
-    }
-    window.addEventListener('storage', onStorage)
     return () => {
       clearInterval(timer)
-      window.removeEventListener('storage', onStorage)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api, analyticsRange])

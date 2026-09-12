@@ -13,17 +13,20 @@ export default function PartyForm({
       onSubmit={(event) => {
         event.preventDefault()
         const data = new FormData(event.currentTarget)
-        onSubmit({
+        const input = {
           name: String(data.get('name') ?? ''),
           phone: String(data.get('phone') ?? ''),
           partySize: Number(data.get('partySize')),
           notes: String(data.get('notes') ?? ''),
-          source: showReservationFields ? String(data.get('source') ?? 'walk-in') : initial.source,
-          reservationTime: data.get('reservationTime')
+        }
+        if (showReservationFields) {
+          input.source = String(data.get('source') ?? 'walk-in')
+          input.reservationTime = data.get('reservationTime')
             ? new Date(String(data.get('reservationTime'))).toISOString()
-            : null,
-          tableId: data.get('tableId') ? String(data.get('tableId')) : null,
-        })
+            : null
+          input.tableId = data.get('tableId') ? String(data.get('tableId')) : null
+        }
+        onSubmit(input)
       }}
     >
       <h3>{title}</h3>

@@ -35,8 +35,11 @@ export default function GuestJoin({ api }) {
           onSubmit={async (input) => {
             try {
               setError('')
-              const snapshot = await api.addParty({ ...input, source: 'remote' })
-              const created = snapshot.queue.find((party) => party.phone === input.phone)
+              const created = api.joinWaitlist
+                ? await api.joinWaitlist(input)
+                : (await api.addParty({ ...input, source: 'remote' })).queue.find(
+                    (party) => party.phone === input.phone,
+                  )
               setDone(created ?? { ...input, waitEstimateMinutes: null })
             } catch (err) {
               setError(err.message ?? 'Could not join')

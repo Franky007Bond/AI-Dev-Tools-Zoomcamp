@@ -1,7 +1,8 @@
+import { getDefaultHttpBackend } from './httpBackend.js'
 import { getDefaultBackend } from './mockBackend.js'
 
 export function createApi(backend) {
-  return {
+  const api = {
     getSnapshot: (now) => Promise.resolve(backend.getSnapshot(now)),
     addParty: (input, now) => Promise.resolve(backend.addParty(input, now)),
     updateParty: (id, patch, now) => Promise.resolve(backend.updateParty(id, patch, now)),
@@ -18,6 +19,11 @@ export function createApi(backend) {
     updateSettings: (patch, now) => Promise.resolve(backend.updateSettings(patch, now)),
     resetDemo: (now) => Promise.resolve(backend.resetDemo(now)),
   }
+  if (typeof backend.joinWaitlist === 'function') {
+    api.joinWaitlist = (input, now) => Promise.resolve(backend.joinWaitlist(input, now))
+  }
+  return api
 }
 
-export const api = createApi(getDefaultBackend())
+const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+export const api = createApi(useMock ? getDefaultBackend() : getDefaultHttpBackend())

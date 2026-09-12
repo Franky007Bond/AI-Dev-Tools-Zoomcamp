@@ -285,7 +285,7 @@ a { color: var(--paprika); }
 
 .party-form { display: grid; gap: 0.65rem; }
 .party-form label { display: grid; gap: 0.25rem; font-size: 12px; line-height: 16px; }
-.party-form input, .party-form select, .seat-label select {
+.party-form input, .party-form select {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.45rem 0.55rem;
@@ -293,6 +293,15 @@ a { color: var(--paprika); }
   color: var(--ink);
   font-size: 14px;
   line-height: 20px;
+}
+.seat-label select {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  background: white;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 16px;
 }
 .party-form input:focus, .party-form select:focus, .seat-label select:focus {
   outline: none;
