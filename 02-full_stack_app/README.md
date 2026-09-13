@@ -2,7 +2,13 @@
 
 Waitly is a single-restaurant, in-house web app that replaces the paper waitlist. It manages a live queue combining walk-ins and reservations, tracks tables on a visual floor plan, sends two-way SMS updates to guests, and forecasts wait times.
 
-> **Status:** Frontend mock is running; backend is not started. Spec: [`_docs/specs.md`](_docs/specs.md). HTTP contract: [`openapi.yaml`](openapi.yaml).
+## Stack
+
+**Frontend** — React SPA built with Vite. The host stand (`/`) and guest join page (`/join`) call a thin API layer in `frontend/src/api/client.js`, which uses `fetch` via `httpBackend.js` to talk to the backend. During local dev, Vite proxies browser requests from `/v1` to the backend so the UI can stay on one origin.
+
+**Backend** — Python API built with FastAPI, managed by `uv`. It implements the HTTP contract in [`openapi.yaml`](openapi.yaml) and keeps state in an in-memory store (seeded demo data, no database yet). Uvicorn serves the API at `http://localhost:8001/v1` by default.
+
+**How they communicate** — JSON over REST. Mutating host actions (add party, seat, reorder, etc.) return a fresh `Snapshot` so the UI can refresh in one round trip; guest join uses `POST /v1/join`. The frontend polls `GET /v1/snapshot` every few seconds to stay live. Tests can still use the in-memory mock in `mockBackend.js` instead of HTTP.
 
 ## Who it's for
 - **Host** — the only staff role in v1. Runs the queue, floor plan, and settings from a desktop/laptop browser at the host stand.
@@ -37,17 +43,53 @@ Web app, built for desktop/laptop browser use.
 
 ## Getting started
 
+Run the backend and frontend in separate terminals.
+
+**Backend** (FastAPI, default port `8001`):
+
+```powershell
+cd backend
+uv sync
+uv run waitly-api      # http://localhost:8001/v1
+```
+
+Or with Make:
+
+```powershell
+cd backend
+make install
+make run
+make test
+```
+
+**Frontend** (Vite + React):
+
 ```powershell
 cd frontend
 npm install
-npm run dev      # http://localhost:5173/  (guest join: /join)
+npm run dev            # http://localhost:5173/  (guest join: /join)
 npm test
 ```
 
-Agent notes (layout, git root, mock vs OpenAPI): [`AGENTS.md`](AGENTS.md).
+The dev server proxies `/v1` to `http://localhost:8001`, so the browser talks to the backend without CORS setup.
 
-## Contributing
-_Contribution guidelines TBD._
+### URLs
+- Host stand: http://localhost:5173/
+- Guest join: http://localhost:5173/join
+- API base: http://localhost:8001/v1
 
-## License
-_TBD._
+If port `5173` is already in use, Vite picks the next free port (for example `5174`).
+
+### Optional env vars
+- `PORT` — backend listen port (default `8001`)
+- `VITE_API_BASE` — frontend API base URL (default `/v1`)
+- `VITE_USE_MOCK=true` — use the in-memory mock instead of HTTP
+
+## Project layout
+- [`frontend/`](frontend/) — host stand + guest join UI
+- [`backend/`](backend/) — FastAPI service with in-memory store
+- [`openapi.yaml`](openapi.yaml) — HTTP contract
+- [`_docs/specs.md`](_docs/specs.md) — product spec
+- [`_docs/design.md`](_docs/design.md) — color and typography tokens
+
+Agent notes: [`AGENTS.md`](AGENTS.md).
